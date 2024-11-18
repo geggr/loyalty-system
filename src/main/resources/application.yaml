@@ -1,0 +1,21 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/loyalty
+    username: postgres
+    password: docker
+  
+  jpa:
+    open-in-view: false
+    show-sql: false
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: false
+
+# Enable to see binding parameters of query
+
+# logging:
+  # level:
+    # org.hibernate.orm.jdbc.bind: trace
