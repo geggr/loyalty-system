@@ -5,6 +5,7 @@ import java.util.UUID;
 
 import com.grimoire.loyalty.customers.Customer;
 import com.grimoire.loyalty.customers.CustomerPointTransaction;
+import com.grimoire.loyalty.products.Product;
 import com.grimoire.loyalty.products.ProductItem;
 
 import jakarta.persistence.Column;
@@ -32,6 +33,10 @@ public class ProductClaim {
     private Customer customer;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_id", nullable = true)
+    private Product product;
+
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_item_id", nullable = true)
     private ProductItem item;
 
@@ -39,25 +44,37 @@ public class ProductClaim {
     @JoinColumn(name = "transaction_id")
     private CustomerPointTransaction transaction;
     
-    @Column(name = "claim_date")
+    @Column(name = "claim_at")
     private LocalDateTime claimDate;
+
+    @Column(name = "redeem_at")
+    private LocalDateTime redeemAt;
 
     @Deprecated // hibernate eyes
     public ProductClaim(){}
 
-    public ProductClaim(Customer customer, CustomerPointTransaction transaction) {
+    public ProductClaim(Customer customer, Product product, CustomerPointTransaction transaction) {
         this.customer = customer;
         this.transaction = transaction;
+        this.product = product;
         this.claimDate = transaction.getTransactionDate();
     }
 
     public ProductClaim(Customer customer, ProductItem item, CustomerPointTransaction transaction) {
-        this(customer, transaction);
+        this(customer, item.getProduct(), transaction);
         this.item = item;
+    }
+
+    public boolean alreadyRedeemed(){
+        return redeemAt != null;
     }
 
     public boolean hasProductId(){
         return item != null;
+    }
+
+    public void redeem(){
+        this.redeemAt = LocalDateTime.now();
     }
 
     public Long getId() {
@@ -72,6 +89,10 @@ public class ProductClaim {
         return customer;
     }
 
+    public Product getProduct() {
+        return product;
+    }
+
     public ProductItem getItem() {
         return item;
     }
@@ -82,5 +103,9 @@ public class ProductClaim {
 
     public LocalDateTime getClaimDate() {
         return claimDate;
+    }
+
+    public LocalDateTime getRedeemAt() {
+        return redeemAt;
     }
 }

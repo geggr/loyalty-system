@@ -1,4 +1,4 @@
-package com.grimoire.loyalty.reedem;
+package com.grimoire.loyalty.redeem;
 
 import java.util.List;
 
@@ -10,7 +10,7 @@ import com.grimoire.loyalty.customers.CustomerPointTransaction;
 import com.grimoire.loyalty.customers.CustomerService;
 import com.grimoire.loyalty.products.Product;
 import com.grimoire.loyalty.products.ProductRepositoryCustom;
-import com.grimoire.loyalty.reedem.input.ReedemProductRequest;
+import com.grimoire.loyalty.redeem.input.RedeemProductRequest;
 import com.grimoire.loyalty.utils.errors.BadRequestError;
 import com.grimoire.loyalty.utils.errors.RequestFieldError;
 
@@ -18,30 +18,30 @@ import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 
 @Service
-public class ReedemProductService {
+public class RedeemProductService {
     
     private final CustomerService customerService;
     private final ProductRepositoryCustom productRepositoryCustom;
     private final EntityManager manager;
     
-    public ReedemProductService(CustomerService customerService, ProductRepositoryCustom productRepositoryCustom, EntityManager manager) {
+    public RedeemProductService(CustomerService customerService, ProductRepositoryCustom productRepositoryCustom, EntityManager manager) {
         this.customerService = customerService;
         this.productRepositoryCustom = productRepositoryCustom;
         this.manager = manager;
     }
 
     @Transactional
-    public ProductClaim execute(ReedemProductRequest request){
+    public ProductClaim execute(RedeemProductRequest request){
         final var product = manager
             .createQuery("SELECT p from Product p WHERE p.code = :code", Product.class)
             .setParameter("code", request.productCode())
             .getResultStream()
             .findFirst()
-            .orElseThrow(() -> new BadRequestError("Product not found for reedem"));
+            .orElseThrow(() -> new BadRequestError("Product not found for redeem"));
 
         final var customer = customerService
             .fetchCustomerWithTransactions(request.customerEmail())
-            .orElseThrow(() -> new BadRequestError("Customer does not exists"));
+            .orElseThrow(() -> new BadRequestError("Customer do not exists"));
 
         if (!customer.canAcquire(product)){
             throw new BadRequestError("Customer can not acquire this product", "insufficient_founds", "Customer has %s points and product cost %s".formatted(customer.getCurrentTotalPoints(), product.getPrice()));
@@ -56,7 +56,7 @@ public class ReedemProductService {
         final var transaction = CustomerPointTransaction.ofProductClaim(customer, product, "Claim product".formatted(product.getName()));
         customer.addTransaction(transaction);
         
-        final var claim = new ProductClaim(customer, transaction);
+        final var claim = new ProductClaim(customer, product, transaction);
         
         manager.persist(transaction);
         manager.persist(claim);
@@ -69,7 +69,7 @@ public class ReedemProductService {
 
         if (lockedItem.isEmpty()){
             throw new BadRequestError(
-                "Failed to reedem product. Try again later!",
+                "Failed to redeem product. Try again later!",
                 List.of(new RequestFieldError("empty_stock", "Item not found in stock")));
         }
 

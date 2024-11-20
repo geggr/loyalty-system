@@ -106,21 +106,21 @@ public class ExecuteE2ETest {
     }
 
     public static class ReedemResponse {
-        private String id;
+        private String sku;
         
         public ReedemResponse(){}
 
-        public String getId() {
-            return id;
+        public String getSku() {
+            return sku;
         }
 
-        public boolean hasId(){
-            return id != null;
+        public boolean hasSku(){
+            return sku != null;
         }
 
         @Override
         public String toString() {
-            return "Reedem Response <%s>".formatted(id);
+            return "Reedem Response <%s>".formatted(sku);
         }
     }
 
@@ -238,7 +238,7 @@ public class ExecuteE2ETest {
                     (result, response) -> {
                         try {
                             final var reedem = response.get();
-                            if (reedem.hasId()){
+                            if (reedem.hasSku()){
                                 result.addSuccess();
                             }
                             else {
